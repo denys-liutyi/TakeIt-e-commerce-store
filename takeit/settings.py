@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     "category",
     "accounts",
     "store",
+    "carts",
 
     #Default apps:
     "django.contrib.admin",
@@ -71,6 +72,8 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 #This will make it able to call the meny links in any template:
                 "category.context_processors.menu_links",
+                #This will make it able to count all the products in cart and show it in any template:
+                "carts.context_processors.counter",
             ],
         },
     },
