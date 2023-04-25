@@ -1,4 +1,5 @@
 from django.shortcuts import render, get_object_or_404
+from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 
 
 from .models import Product
@@ -17,14 +18,27 @@ def store(request, category_slug=None):
     if category_slug != None:
         categories = get_object_or_404(Category, slug=category_slug)
         products = Product.objects.all().filter(category=categories, is_available=True)
+
+        #Paginator to display 6 products on page.
+        paginator = Paginator(products, 6) #Show 6 products per page.
+        page = request.GET.get('page')
+        paged_products = paginator.get_page(page)
+        
         products_count = products.count()
+        
     #The store page, which shows all available in stock products (if there is no slug)
     else:    
         products = Product.objects.all().filter(is_available=True)
+
+        #Paginator to display 6 products on page.
+        paginator = Paginator(products, 6) #Show 6 products per page.
+        page = request.GET.get('page')
+        paged_products = paginator.get_page(page)
+
         products_count = products.count()
 
     context = {
-        'products': products,
+        'products': paged_products, #We pass only 6 products to display, which we got using paginator.
         'products_count': products_count,
     }
     return render (request, 'store/store.html', context)
