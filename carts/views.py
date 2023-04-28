@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from store.models import Product
+from store.models import Product, Variation
 from carts.models import Cart, CartItem
 from django.http import HttpResponse
 
@@ -14,33 +14,86 @@ def _cart_id(request):
 
 
 def add_cart(request, product_id):
-    """Adds selected product to cart or increments quantity if product is already in cart."""
+    """
+    Stores the variation of selected product
+    and adds it to cart or increments quantity if product is already in cart.
+    """
     #Get the product.
     product = Product.objects.get(id=product_id)
+    #Set an empty list of products with variations.
+    product_variation = []
+
+    if request.method == 'POST':
+        for item in request.POST:
+            key = item
+            value = request.POST[key]
+
+            #Check if key, value from the request.POST above 
+            #are matching the model values (variation value and category) in Variation model.
+            try:
+                #'__iexact' below performs a case-insensitive exact match in the database.
+                variation = Variation.objects.get(product=product, variation_category__iexact=key, variation_value__iexact=value)
+                product_variation.append(variation)
+            except:
+                pass
+
     try:
         #Get the cart using the cart id which is present in the session (in cookies)
         cart = Cart.objects.get(cart_id=_cart_id(request))
-    except Cart.DoesNotExist:
+    except Cart.ObjectDoesNotExist:
         cart = Cart.objects.create(cart_id=_cart_id(request))
     cart.save()
 
     #Combine the product and the cart to get the cart item.
-    try:
-        cart_item = CartItem.objects.get(product=product, cart=cart)
-        cart_item.quantity += 1
-        cart_item.save()
-    except CartItem.DoesNotExist:
+    #First check if cart item exists.
+    is_cart_item_exists = CartItem.objects.filter(product=product, cart=cart).exists() #Returns True (there are cart items) or False
+    
+    if is_cart_item_exists:
+        cart_item = CartItem.objects.filter(product=product, cart=cart) #Return cart item objects.
+        #existing variations --> database
+        #current variation --> product_variation
+        #item_id --> database
+        existing_variation_list = []
+        id = []
+        for item in cart_item:
+            existing_variation = item.variations.all()
+            existing_variation_list.append(list(existing_variation)) #It's a query set, so it should be converted to a list.
+            id.append(item.id)
+        print(existing_variation_list)
+
+        if product_variation in existing_variation_list:
+            #Increase cart item quantity.
+            index = existing_variation_list.index(product_variation)
+            item_id = id[index]
+            item = CartItem.objects.get(product=product, id=item_id)
+            item.quantity += 1
+
+            item.save()
+        else:
+            #Create a new cart item.
+            item = CartItem.objects.create(product=product, quantity=1, cart=cart)
+            if len(product_variation) > 0:
+                item.variations.clear()    
+                item.variations.add(*product_variation) #'*' means to add all the variations.
+
+            item.save()
+    else:
         cart_item = CartItem.objects.create(
             product = product,
             quantity = 1,
             cart = cart,
         )
+
+        if len(product_variation) > 0:
+            cart_item.variations.clear()
+            cart_item.variations.add(*product_variation)
+
         cart_item.save()
 
     return redirect('carts:cart')
 
 
-def remove_cart(request, product_id):
+def remove_cart(request, product_id, cart_item_id):
     """Decrements quantity of the product if it is already in cart 
     or removes selected product from cart if the quantity is less than 1."""
     #Get the cart using the cart id which is present in the session (in cookies).
@@ -48,25 +101,28 @@ def remove_cart(request, product_id):
     #Get the product.
     product = get_object_or_404 (Product, id=product_id)
     #Bring the cart item.
-    cart_item = CartItem.objects.get(product=product, cart=cart)
+    try:
+        cart_item = CartItem.objects.get(product=product, cart=cart, id=cart_item_id)
 
-    if cart_item.quantity > 1:
-        cart_item.quantity -= 1
-        cart_item.save()
-    else:
-        cart_item.delete()
+        if cart_item.quantity > 1:
+            cart_item.quantity -= 1
+            cart_item.save()
+        else:
+            cart_item.delete()
+    except:
+        pass
 
     return redirect('carts:cart')
 
 
-def remove_cart_item(request, product_id):
+def remove_cart_item(request, product_id, cart_item_id):
     """Removes selected product from cart."""
     #Get the cart using the cart id which is present in the session (in cookies).
     cart = Cart.objects.get(cart_id=_cart_id(request))
     #Get the product.
     product = get_object_or_404 (Product, id=product_id)
     #Bring the cart item.
-    cart_item = CartItem.objects.get(product=product, cart=cart)
+    cart_item = CartItem.objects.get(product=product, cart=cart, id=cart_item_id)
 
     cart_item.delete()
 

@@ -47,9 +47,11 @@
         </div> <!-- col.// -->
         <a href="{% url 'store:store' %}" class="btn btn-outline-primary">Store</a>
         <div class="col-lg  col-md-6 col-sm-12 col">
-            <form action="#" class="search">
+            <!-- 'method="GET"' below is added. -->
+            <form action="{% url 'store:search' %}" class="search" method="GET">
                 <div class="input-group w-100">
-                    <input type="text" class="form-control" style="width:60%;" placeholder="Search">
+                    <!-- 'name="keyword"' below adds the keyword which is passed by the user to the URL of the new search page. -->
+                    <input type="text" class="form-control" style="width:60%;" placeholder="Search" name="keyword">
                     
                     <div class="input-group-append">
                       <button class="btn btn-primary" type="submit">

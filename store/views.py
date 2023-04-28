@@ -1,5 +1,7 @@
 from django.shortcuts import render, get_object_or_404
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
+from django.http import HttpResponse
+from django.db.models import Q
 
 
 from .models import Product
@@ -28,7 +30,7 @@ def store(request, category_slug=None):
         
     #The store page, which shows all available in stock products (if there is no slug)
     else:    
-        products = Product.objects.all().filter(is_available=True)
+        products = Product.objects.all().filter(is_available=True).order_by('id')
 
         #Paginator to display 6 products on page.
         paginator = Paginator(products, 6) #Show 6 products per page.
@@ -61,3 +63,23 @@ def product_detail(request, category_slug, product_slug):
         'in_cart': in_cart,
     }
     return render(request, 'store/product_detail.html', context)
+
+
+def search(request):
+    """   """
+    #Check if there is a keyword in the get request (in the URL) and store the value of 'keyword' in the variable.
+    if 'keyword' in request.GET:
+        keyword = request.GET['keyword']
+
+        if keyword:
+            #icontains (below) searches for anything related to keyword in product description.
+            products = Product.objects.order_by('-created_date').filter(
+                Q(product_description__icontains=keyword) | Q(product_name__icontains=keyword)
+                ) 
+            products_count = products.count()
+
+    context = {
+        'products': products,
+        'products_count': products_count,
+    }
+    return render (request, 'store/store.html', context)
