@@ -1,0 +1,14 @@
+
+
+{% autoescape off %} 
+
+Hi, {{ user.first_name }}!
+
+thank you for the registration!
+
+Please click on link below to activate your account:
+http://{{ domain }}{% url 'accounts:activate' uidb64=uid token=token %} 
+
+If you think it's not you, please ignore this email.
+
+{% endautoescape %}

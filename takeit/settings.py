@@ -151,3 +151,13 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 MESSAGE_TAGS = {
     messages.ERROR: "danger",
 }
+
+
+#SMTP (Simple Mail Transfer Protocol) configuration
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend' #Specifies the django backend that will work with the host email server specified at EMAIL_HOST part to send emails
+EMAIL_HOST = 'smtp.gmail.com' #This specifies the address of the SMTP server that Django will use to send emails.
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'takeit.brandstore@gmail.com' #This specifies the email address that Django will use as the sender's address when sending emails.
+with open('app_password_for_smtp_gmail.txt') as f:
+    EMAIL_HOST_PASSWORD = f.read().strip() #Goggle auto generated password for 3rd apps (since 2022).
+EMAIL_USE_TLS = True #This specifies whether to use Transport Layer Security (TLS) encryption when communicating with the SMTP server. 

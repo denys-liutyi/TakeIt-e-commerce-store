@@ -40,7 +40,7 @@ def add_cart(request, product_id):
     try:
         #Get the cart using the cart id which is present in the session (in cookies)
         cart = Cart.objects.get(cart_id=_cart_id(request))
-    except Cart.ObjectDoesNotExist:
+    except Cart.DoesNotExist:
         cart = Cart.objects.create(cart_id=_cart_id(request))
     cart.save()
 
