@@ -83,7 +83,6 @@ def logout(request):
 
 
 def activate(request, uidb64, token):
-    #return HttpResponse('ok')
     try:
         uid = urlsafe_base64_decode(uidb64).decode() #Decodes and gives the primary key of the user
         user = Account._default_manager.get(pk=uid) #Return the user object
@@ -104,3 +103,70 @@ def activate(request, uidb64, token):
 @login_required(login_url = 'login')
 def dashboard(request):
     return render(request, 'accounts/dashboard.html')
+
+
+def forgotPassword(request):
+    if request.method == 'POST':
+        email = request.POST['email']
+        if Account.objects.filter(email=email).exists():
+            user = Account.objects.get(email__exact=email) #'__exact' checks if the email entered by the user is exactly the same as what we have in out database.
+        
+            #Reset password email (similar to user acount activation by email above).
+            current_site = get_current_site(request)
+            mail_subject = 'Reset your password.'
+            #Pass the content we are going to send in an email:
+            message = render_to_string('accounts/reset_password_email.html',{
+                'user': user,
+                'domain': current_site,
+                'uid': urlsafe_base64_encode(force_bytes(user.pk)), #-->Encodind user's primary key, so nobody could seeit.
+                'token': default_token_generator.make_token(user), #-->Create a token for particular user.
+            }) 
+            to_email = email
+            send_email = EmailMessage(mail_subject, message, to=[to_email])
+            send_email.send()
+
+            messages.success(request, 'Password reset email was sent to your email address.')
+            return redirect('accounts:login')
+
+        else:
+            messages.error(request, 'This account does not exist.')
+            return redirect('accounts:forgotPassword')
+        
+    return render(request, 'accounts/forgotPassword.html')
+
+
+def resetpassword_validate(request, uidb64, token):
+    try:
+        uid = urlsafe_base64_decode(uidb64).decode() #Decodes and gives the primary key of the user.
+        user = Account._default_manager.get(pk=uid) #Return the user object.
+    except(TypeError, ValueError, OverflowError, Account.DoesNotExist):
+        user = None
+
+    if user is not None and default_token_generator.check_token(user, token):
+        request.session['uid'] = uid #To be able to access to this session later when resetting the password.
+        
+        messages.success(request, 'Please reset your password.')
+        return redirect('accounts:resetPassword')
+    else:
+        messages.error(request, 'This link has been expired')
+        return redirect('accounts:login')
+    
+
+def resetPassword(request):
+    if request.method == 'POST':
+        password = request.POST['password']
+        confirm_password = request.POST['confirm_password']
+
+        if password == confirm_password:
+            uid = request.session.get('uid')
+            user = Account.objects.get(pk=uid)
+            user.set_password(password) #Must use this built-in django function (you can't just save password). Django will hash the password.
+            user.save()
+            messages.success(request, 'Password reset successfully!')
+            return redirect('accounts:login')
+        else:
+            messages.error(request, 'Password do not match!')
+            return redirect('accounts:resetPassword')
+    
+    else:
+        return render (request, 'accounts/resetPassword.html')
