@@ -1,5 +1,4 @@
 from django.shortcuts import render, redirect
-from .forms import RegistrationForm
 from django.contrib import messages, auth
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
@@ -11,7 +10,12 @@ from django.utils.encoding import force_bytes
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import EmailMessage
 
+import requests
+
+from .forms import RegistrationForm
 from .models import Account
+from carts.views import _cart_id
+from carts.models import Cart, CartItem
 
 # Create your views here.
 
@@ -65,9 +69,57 @@ def login(request):
         user = auth.authenticate(email=email, password=password)
 
         if user is not None:
+            #First check if there are items in the cart.
+            try:
+                cart = Cart.objects.get(cart_id=_cart_id(request))
+                is_cart_item_exists = CartItem.objects.filter(cart=cart).exists() #Returns True (there is a cart with items) or False
+                if is_cart_item_exists:
+                    cart_item = CartItem.objects.filter(cart=cart)
+
+                    #Getting the product variations by cart id.
+                    product_variation = []
+                    for item in cart_item:
+                        variation = item.variations.all()
+                        product_variation.append(list(variation))
+
+                    #Get the cart items from the user to access his product variations.
+                    cart_item = CartItem.objects.filter(user=user) #Return cart item objects of the user.
+                    existing_variation_list = []
+                    id = []
+                    for item in cart_item:
+                        existing_variation = item.variations.all()
+                        existing_variation_list.append(list(existing_variation)) #It's a query set, so it should be converted to a list.
+                        id.append(item.id)
+
+                    for pr in product_variation:
+                        if pr in existing_variation_list:
+                            index = existing_variation_list.index(pr) #This will show us the position where we found the common item.
+                            item_id = id[index]
+                            item = CartItem.objects.get(id=item_id)
+                            item.quantity += 1
+                            item.user = user
+                            item.save()
+                        else:
+                            cart_item = CartItem.objects.filter(cart=cart)
+                            for item in cart_item:
+                                item.user = user
+                                item.save()
+            except:
+                pass
+
             auth.login(request, user)
             messages.success(request, 'You are now logged in')
-            return redirect ('accounts:dashboard')
+            url = request.META.get('HTTP_REFERER') #HTTP_REFERER will grab the previous url from where you came.
+            #We use the 'requests' library.
+            try:
+                query = requests.utils.urlparse(url).query
+                #next=/cart/checkout/ 
+                params = dict(x.split('=') for x in query.split('&')) #Split 'next=/cart/checkout/' and make a dictionary {'next': '/cart/checkout/'}.
+                if 'next' in params:
+                    nextPage = params['next']
+                    return redirect(nextPage)
+            except:
+                return redirect ('accounts:dashboard')
         else:
             messages.error(request, 'Invalid login data')
             return redirect('accounts:login')
