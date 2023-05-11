@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     "accounts",
     "store",
     "carts",
+    "orders",
 
     #Default apps:
     "django.contrib.admin",
