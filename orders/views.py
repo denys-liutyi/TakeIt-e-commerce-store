@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 import datetime
 import json
 from django.core.mail import EmailMessage
@@ -72,8 +72,11 @@ def payments(request):
     send_email.send()
 
     #Send order number and transaction id back to sendData method (in payments.html) via JsonResponse.
-
-    return render(request, 'orders/payments.html')
+    data = {
+        'order_number': order.order_number,
+        'transID': payment.payment_id,
+    }
+    return JsonResponse(data)
 
 
 def place_order(request, total=0, quantity=0):
@@ -140,3 +143,34 @@ def place_order(request, total=0, quantity=0):
         
         else:
             return redirect('carts:checkout')
+
+
+def order_complete(request):
+    #request.GET below is a dictionary-like object that contains all the query parameters in the URL.
+    #The GET method is used to retrieve data sent in the URL parameters.
+    #request.GET.get('order_number') retrieves the value of the 'order_number' parameter from the URL. Similarly works request.GET.get('payment_id').
+    order_number = request.GET.get('order_number')
+    transID = request.GET.get('payment_id')
+
+    try:
+        order = Order.objects.get(order_number=order_number, is_ordered=True)
+        ordered_products = OrderProduct.objects.filter(order_id=order.id)
+
+        subtotal = 0
+        for i in ordered_products:
+            subtotal += i.product_price * i.quantity
+
+        payment = Payment.objects.get(payment_id=transID)
+        context = {
+            'order': order,
+            'ordered_products': ordered_products,
+            'order_number': order.order_number,
+            'transID': payment.payment_id,
+            'payment': payment,
+            'subtotal': subtotal,
+        }
+        return render(request, 'orders/order_complete.html', context)
+    
+    except (Payment.DoesNotExist, Order.DoesNotExist):
+        #If the user puts a wrong payment or order ID value in the url, we send him to the home page.
+        return redirect('home')
