@@ -69,6 +69,9 @@ class Account(AbstractBaseUser):
         """Returns a string email representation of a model's object"""
         return self.email
     
+    def full_name(self):
+        return f'{self.first_name} {self.last_name}'
+    
     def has_perm(self, perm, obj=None):
         """A method that is called to determine if a user has a specific permission"""
         return True
