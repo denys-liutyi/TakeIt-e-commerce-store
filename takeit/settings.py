@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 from django.contrib.messages import constants as messages
+from decouple import config
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -22,11 +23,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-with open('secret_key.txt') as f:
-    SECRET_KEY = f.read().strip()
+SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', default=True, cast=bool)
 
 ALLOWED_HOSTS = []
 
@@ -154,11 +154,10 @@ MESSAGE_TAGS = {
 }
 
 
-#SMTP (Simple Mail Transfer Protocol) configuration
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend' #Specifies the django backend that will work with the host email server specified at EMAIL_HOST part to send emails
-EMAIL_HOST = 'smtp.gmail.com' #This specifies the address of the SMTP server that Django will use to send emails.
-EMAIL_PORT = 587
-EMAIL_HOST_USER = 'takeit.brandstore@gmail.com' #This specifies the email address that Django will use as the sender's address when sending emails.
-with open('app_password_for_smtp_gmail.txt') as f:
-    EMAIL_HOST_PASSWORD = f.read().strip() #Goggle auto generated password for 3rd apps (since 2022).
-EMAIL_USE_TLS = True #This specifies whether to use Transport Layer Security (TLS) encryption when communicating with the SMTP server. 
+#SMTP (Simple Mail Transfer Protocol) configuration. Keep secret in production.
+EMAIL_BACKEND = config('EMAIL_BACKEND') #Specifies the django backend that will work with the host email server specified at EMAIL_HOST part to send emails
+EMAIL_HOST = config('EMAIL_HOST') #This specifies the address of the SMTP server that Django will use to send emails.
+EMAIL_PORT = config('EMAIL_PORT', cast=int)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER') #This specifies the email address that Django will use as the sender's address when sending emails.
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD') #Goggle auto generated password for 3rd apps (since 2022).
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', cast=bool) #This specifies whether to use Transport Layer Security (TLS) encryption when communicating with the SMTP server. 
