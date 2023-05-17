@@ -41,6 +41,9 @@ INSTALLED_APPS = [
     "carts",
     "orders",
 
+    #Other Django apps:
+    "admin_honeypot",
+
     #Default apps:
     "django.contrib.admin",
     "django.contrib.auth",

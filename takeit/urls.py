@@ -22,7 +22,11 @@ from django.conf import settings
 from . import views
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+
+    #Creating fake admin panel. #Admin security measure: fake admin url, haker tries to log in, his IP is recorded in real admin panel and we can block him.
+    path('admin/', include('admin_honeypot.urls', namespace='admin_honeypot')), 
+    #Real admin panel.
+    path('takeitadmin/', admin.site.urls),
     path('', views.home, name='home'),
     path('store/', include('store.urls')),
     path('cart/', include('carts.urls')),
