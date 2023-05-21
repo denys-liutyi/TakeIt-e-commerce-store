@@ -66,22 +66,24 @@ class Account(AbstractBaseUser):
     objects = MyAccountManager()
 
     def __str__(self):
-        """Returns a string email representation of a model's object"""
+        """Returns a string email representation of a model's object."""
         return self.email
     
     def full_name(self):
+        """Returns user's full name."""
         return f'{self.first_name} {self.last_name}'
     
     def has_perm(self, perm, obj=None):
-        """A method that is called to determine if a user has a specific permission"""
+        """A method that is called to determine if a user has a specific permission."""
         return True
     
     def has_module_perms(self, app_label):
-        """A method that is used to determine if a user has permissions for a specific module (or app)"""
+        """A method that is used to determine if a user has permissions for a specific module (or app)."""
         return True
     
 
 class UserProfile(models.Model):
+    """Model representing user profiles with additional information."""
     user = models.OneToOneField(Account, on_delete=models.CASCADE)
     address_line_1 = models.CharField(blank=True, max_length=100)
     address_line_2 = models.CharField(blank=True, max_length=100)

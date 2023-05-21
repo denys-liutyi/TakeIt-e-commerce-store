@@ -236,6 +236,9 @@ def cart(request, total=0, quantity=0, cart_items=None, tax=0, grand_total=0):
 
 @login_required(login_url='accounts:login')
 def checkout(request, total=0, quantity=0, cart_items=None, tax=0, grand_total=0):
+    """
+    Handles the checkout process, calculates the total price, quantity, tax, and grand total for the items in the cart.
+    """
     try:
         if request.user.is_authenticated:
             cart_items = CartItem.objects.filter(user=request.user, is_active=True)

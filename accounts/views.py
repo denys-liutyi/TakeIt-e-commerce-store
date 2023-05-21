@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages, auth
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
-#All importsbelow are for verification email.
+#All imports below are for verification email.
 from django.contrib.sites.shortcuts import get_current_site
 from django.template.loader import render_to_string
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -20,6 +20,10 @@ from orders.models import Order, OrderProduct
 
 
 def register(request):
+    """
+    This view handles the registration process when a user submits the registration form.
+    It creates a new user account, sends an account activation email, and redirects to the login page.
+    """
     if request.method == 'POST':
         form = RegistrationForm(request.POST)
         if form.is_valid():
@@ -68,6 +72,10 @@ def register(request):
 
 
 def login(request):
+    """
+    This view handles the login process when a user submits the login form.
+    It authenticates the user and logs him in.
+    """
     if request.method == 'POST':
         email = request.POST['email']
         password = request.POST['password']
@@ -135,12 +143,14 @@ def login(request):
 
 @login_required(login_url = 'accounts:login')
 def logout(request):
+    """This view logs out the currently authenticated user."""
     auth.logout(request)
     messages.success(request, 'You are logged out.')
     return redirect ('accounts:login')
 
 
 def activate(request, uidb64, token):
+    """This view activates the user's account when they click on the activation link sent to their email."""
     try:
         uid = urlsafe_base64_decode(uidb64).decode() #Decodes and gives the primary key of the user
         user = Account._default_manager.get(pk=uid) #Return the user object
@@ -160,6 +170,7 @@ def activate(request, uidb64, token):
 
 @login_required(login_url = 'accounts:login')
 def dashboard(request):
+    """This view displays the user's dashboard, showing their orders and user profile."""
     orders = Order.objects.order_by('-created_at').filter(user_id=request.user.id, is_ordered=True) # '-created_at' -> minus at the beginning gives the descending order.
     orders_count = orders.count()
     userprofile = UserProfile.objects.get(user_id=request.user.id)
@@ -172,6 +183,10 @@ def dashboard(request):
 
 
 def forgotPassword(request):
+    """
+    This view handles the password recovery process when a user submits the forgot password form.
+    It sends a password reset email to the user's email address.
+    """
     if request.method == 'POST':
         email = request.POST['email']
         if Account.objects.filter(email=email).exists():
@@ -202,6 +217,10 @@ def forgotPassword(request):
 
 
 def resetpassword_validate(request, uidb64, token):
+    """
+    This view validates the password reset link sent to the user's email address.
+    If the link is valid, it stores the user's primary key in the session for later password reset.
+    """
     try:
         uid = urlsafe_base64_decode(uidb64).decode() #Decodes and gives the primary key of the user.
         user = Account._default_manager.get(pk=uid) #Return the user object.
@@ -219,6 +238,10 @@ def resetpassword_validate(request, uidb64, token):
     
 
 def resetPassword(request):
+    """
+    This view handles the password reset process when a user submits the reset password form.
+    It sets a new password for the user.
+    """
     if request.method == 'POST':
         password = request.POST['password']
         confirm_password = request.POST['confirm_password']
@@ -240,6 +263,7 @@ def resetPassword(request):
 
 @login_required(login_url='accounts:login')
 def my_orders(request):
+    """Displays the orders of the currently logged-in user."""
     orders = Order.objects.filter(user=request.user, is_ordered = True).order_by('-created_at')
     context = {
         'orders': orders,
@@ -249,6 +273,7 @@ def my_orders(request):
 
 @login_required(login_url='accounts:login')
 def edit_profile(request):
+    """Allows the user to edit their profile information."""
     userprofile = get_object_or_404(UserProfile, user=request.user)
 
     if request.method == 'POST':
@@ -274,6 +299,7 @@ def edit_profile(request):
 
 @login_required(login_url='accounts:login')
 def change_password(request):
+    """Allows the user to change his password."""
     if request.method == 'POST':
         current_password = request.POST['current_password'] #['current_password'] -> it's the name of the '<input ... name ...>' in change_password.html.
         new_password = request.POST['new_password']
@@ -300,6 +326,7 @@ def change_password(request):
 
 @login_required(login_url='accounts:login')
 def order_detail(request, order_id):
+    """Displays the details of a specific order."""
     order_detail = OrderProduct.objects.filter(order__order_number=order_id)
     order = Order.objects.get(order_number=order_id)
 

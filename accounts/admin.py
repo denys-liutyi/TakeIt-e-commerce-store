@@ -16,7 +16,6 @@ class AccountAdmin(UserAdmin):
     readonly_fields = ('last_login', 'date_joined')
     ordering = ('-date_joined', )
 
-
     filter_horizontal = ()
     list_filter = ()
     fieldsets = ()
