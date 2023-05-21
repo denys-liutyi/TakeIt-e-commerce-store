@@ -13,6 +13,7 @@ from store.models import Product
 # Create your views here.
 
 def payments(request):
+    """Handle payment for an order."""
     body = json.loads(request.body)
     order = Order.objects.get(user=request.user, is_ordered=False, order_number=body['orderID'])
 
@@ -80,6 +81,7 @@ def payments(request):
 
 
 def place_order(request, total=0, quantity=0):
+    """Handle the placement of an order."""
     current_user = request.user
 
     #If the cart count is less or equal to 0, redirect user to the shop.
@@ -146,6 +148,7 @@ def place_order(request, total=0, quantity=0):
 
 
 def order_complete(request):
+    """View function to display the order completion page."""
     #request.GET below is a dictionary-like object that contains all the query parameters in the URL.
     #The GET method is used to retrieve data sent in the URL parameters.
     #request.GET.get('order_number') retrieves the value of the 'order_number' parameter from the URL. Similarly works request.GET.get('payment_id').

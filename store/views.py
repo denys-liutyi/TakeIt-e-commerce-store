@@ -82,7 +82,7 @@ def product_detail(request, category_slug, product_slug):
 
 
 def search(request):
-    """   """
+    """View function for searching products based on a keyword."""
     #Check if there is a keyword in the get request (in the URL) and store the value of 'keyword' in the variable.
     if 'keyword' in request.GET:
         keyword = request.GET['keyword']
@@ -102,6 +102,7 @@ def search(request):
 
 
 def submit_review(request, product_id):
+    """View function for submitting a review for a product."""
     url = request.META.get('HTTP_REFERER') #Stores the current url of the product.
     if request.method == 'POST':
         try:

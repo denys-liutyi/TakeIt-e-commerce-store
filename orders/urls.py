@@ -1,4 +1,4 @@
-"""Defines URL patterns for the APP orders"""
+"""URL patterns for the APP orders"""
 
 from django.urls import path
 from . import views

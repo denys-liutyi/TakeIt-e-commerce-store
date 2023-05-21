@@ -4,12 +4,14 @@ from .models import Payment, Order, OrderProduct
 
 
 class OrderProductInline(admin.TabularInline):
+    """Inline class for displaying OrderProduct model in the admin interface."""
     model = OrderProduct
     readonly_fields = ('payment', 'user', 'product', 'quantity', 'product_price', 'ordered')
     extra = 0
 
 
 class OrderAdmin(admin.ModelAdmin):
+    """Admin class for managing the Order model in the admin interface."""
     list_display = ['order_number', 'full_name', 'phone', 'email', 'city', 'order_total', 'tax', 'status', 'is_ordered', 'created_at']
     list_filter = ['status', 'is_ordered']
     search_fields = ['order_number', 'first_name', 'last_name', 'phone', 'email']

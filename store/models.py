@@ -32,6 +32,7 @@ class Product(models.Model):
             return f"{self.product_name[:50]}..."
         
     def averageReview(self):
+        """Calculate the average rating of the product."""
         reviews = ReviewRating.objects.filter(product=self, status=True).aggregate(average=Avg('rating'))
         avg = 0
         if reviews['average'] is not None:
@@ -39,6 +40,7 @@ class Product(models.Model):
         return avg
     
     def countReview(self):
+        """Count the number of reviews for the product."""
         reviews = ReviewRating.objects.filter(product=self, status=True).aggregate(count=Count('id'))
         count = 0
         if reviews['count'] is not None:
@@ -79,6 +81,7 @@ class Variation(models.Model):
     
 
 class ReviewRating(models.Model):
+    """Model for representing a review and rating."""
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     user = models.ForeignKey(Account, on_delete=models.CASCADE)
     subject = models.CharField(max_length=100, blank=True)
@@ -90,5 +93,6 @@ class ReviewRating(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
+        """Simple string representation of the review."""
         return self.subject
     

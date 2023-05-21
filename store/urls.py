@@ -1,4 +1,4 @@
-"""Defines URL patterns for the APP store"""
+"""Defines URL patterns for the APP store."""
 
 from django.urls import path
 from . import views
